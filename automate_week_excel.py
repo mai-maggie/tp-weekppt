@@ -1,3 +1,9 @@
+"""
+从领星下载广告-广告asin分析，选择ppt模版作为sample1
+从领星下载asin纬度的利润报表，选择ppt模版作为sample2
+从领星下载统计-产品表现，选择ppt模版作为sample3
+"""
+
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils.cell import get_column_letter
 
@@ -16,6 +22,13 @@ column_titles = ['ASIN', '品名', '价格', '曝光', '点击', 'CTR',
 
 # copy titles to the sheet_total
 def copy_titles(titles_list, sheet):
+    """
+    copy titles from the titles list to the sheet.
+
+    :param titles_list: list. a list of titles
+    :param sheet:variable. the sheet name of the target sheet
+    :return: 'Done' when all titles have been copied.
+    """
     column_titles_len = len(titles_list)
     count = 0
     for row in sheet.iter_rows(min_row=1,
@@ -24,6 +37,7 @@ def copy_titles(titles_list, sheet):
             if count < column_titles_len:
                 cell.value = column_titles[count]
             count += 1
+    return 'Done'
 
 
 # fill sheet totals
@@ -37,6 +51,13 @@ source_sheet1.delete_rows(2, amount=1)
 
 # make a function to copy from source1 to sheet_total
 def copy_source1(source_row_num, dest_col):
+    """
+    copy from the source1 sheet to the target sheet.
+    :param source_row_num: int. row number of the source sheet to
+    copy from.
+    :param dest_col: int. column number of the target sheet.
+    :return: None
+    """
     list_source = []
     for i, row in enumerate(source_sheet1):
         if i == 0:
@@ -51,41 +72,31 @@ def copy_source1(source_row_num, dest_col):
             i += 1
 
 
-# copy asin col=3
-copy_source1(3, "A")
-
+# a function to copy source1 to sheet total
+# copy asin source_col=3,
 # copy 价格/竞价 col=7
-copy_source1(7, "C")
-
 # copy 曝光 col=9
-copy_source1(9, "D")
-
 # copy 点击 col=10
-copy_source1(10, "E")
-
 # copy CTR col=11
-copy_source1(11, "F")
-
 # copy ACOS col=17
-copy_source1(17, "G")
-
 # copy ACOAS col=18
-copy_source1(18, "H")
-
 # copy 广告花费 col=13
-copy_source1(13, "I")
-
 # copy 店铺销售额 col=14
-copy_source1(14, "J")
-
 # copy 广告销售额 col=14
-copy_source1(15, "K")
-
 # copy 店铺销量 col=23
-copy_source1(23, "L")
-
 # copy 广告销量 col=24
-copy_source1(24, "M")
+def fill_fr_source1():
+    """
+    fill the target sheet with data from source sheet1.
+    """
+    source1_dict = {3: 'A', 7: 'C', 9: 'D', 10: 'E', 11: 'F', 17: 'G',
+                    18: 'H', 13: 'I',
+                    14: 'J', 15: 'K', 23: 'L', 24: 'M'}
+    for key, value in source1_dict.items():
+        copy_source1(key, value)
+
+
+fill_fr_source1()
 
 # close source sheet1
 # source1.save("sample1.xlsx")
@@ -120,6 +131,15 @@ source_sheet2.delete_rows(1, amount=1)
 # make a function the generate a dictionary of key_asin and
 # value_target value.
 def make_dict_source(source_sheet, lookup_col_num, return_col_num):
+    """
+    create a dictionary with the data from the source sheet's column
+
+    :param source_sheet:variable of a source sheet.
+    :param lookup_col_num:string. keys of the dictionary
+    :param return_col_num:string. values of the dictionary
+    :return:a dictionary with the keys of the lookup column and
+    values of the return column.
+    """
     dict = {}
     for i, row in enumerate(source_sheet):
         if i == 0:
@@ -137,6 +157,16 @@ def make_dict_source(source_sheet, lookup_col_num, return_col_num):
 def fill_sheet_total(source_dict,
                      lookup_col_num,
                      target_col_num):
+    """
+    fill the target sheet with data from the dictionary made from
+    source sheet if the lookup column number value is None. Get the
+    value from the dictionary and add it to the cell.
+    :param source_dict: a dictionary
+    :param lookup_col_num: int. the target column number of the lookup column
+    :param target_col_num: int. the target column number of the
+    cell to be filled in.
+    :return: None
+    """
     source_dict = source_dict
     for row in sheet_total:
         if row[target_col_num].value == None:
@@ -163,6 +193,11 @@ source_sheet3 = source3.active
 
 
 def edit_source_dict(source_dict):
+    """
+    edit the values of the dictionary to save only the number part.
+    :param source_dict: dict. the dictionary to be edited.
+    :return: the edited dictionary
+    """
     ready_dict = source_dict
     modified_dict = {}
     for key, value in ready_dict.items():
@@ -190,6 +225,11 @@ copy_titles(column_titles, sheet_tp)
 
 # sort the data to the two sheets function
 def sort_data():
+    """
+    if the row 1 cell contains 'W' then copy it to the myyweld
+    sheet else copy it to the ttamplar sheet.
+    :return: None
+    """
     for i, row in enumerate(sheet_total):
         if i == 0:
             continue
@@ -204,20 +244,28 @@ def sort_data():
                 sheet_tp.cell(row=tp_max_row,
                               column=cell.column).value = cell.value
 
-#sort and fill the two brand sheets.
+
+# sort and fill the two brand sheets.
 sort_data()
 
-#sum up the two brand sheet.
+
+# sum up the two brand sheet.
 def sum_up(sheet):
+    """
+    sum up some columns
+    :param sheet: worksheet to work on.
+    :return: None
+    """
     max_row = sheet.max_row
-    for cell in sheet[max_row+1]:
-        if 3<cell.column<15:
-            column_letter=get_column_letter(cell.column)
-            print(column_letter)
+    sheet.cell(row=max_row + 1, column=2).value = '合计'
+    for cell in sheet[max_row + 1]:
+        if 3 < cell.column < 15:
+            column_letter = get_column_letter(cell.column)
             cell.value = (f"=SUM({column_letter}2:{column_letter}"
                           f"{max_row})")
 
-#sum up for two brand sheets
+
+# sum up for two brand sheets
 sum_up(sheet_mw)
 sum_up(sheet_tp)
 
